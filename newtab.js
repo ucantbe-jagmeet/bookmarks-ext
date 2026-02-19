@@ -1,3 +1,4 @@
+// --- DOM Elements ---
 const grid = document.getElementById("grid");
 const empty = document.getElementById("empty");
 const searchInput = document.getElementById("search");
@@ -9,30 +10,146 @@ const colSlider = document.getElementById("col-size");
 const colSliderContainer = document.getElementById("col-slider-container");
 const themeSelect = document.getElementById("theme-select");
 
+// Account Elements
+const accountBtn = document.getElementById("active-account-btn");
+const accountDropdown = document.getElementById("account-dropdown");
+
+// Modal Elements
+const modal = document.getElementById("shortcut-modal");
+const saveShortcutBtn = document.getElementById("save-shortcut");
+const cancelShortcutBtn = document.getElementById("cancel-shortcut");
+const nameInput = document.getElementById("shortcut-name");
+const urlInput = document.getElementById("shortcut-url");
+
 let allLinks = [];
 
+// --- Config / Persistence ---
 let savedCols = parseInt(localStorage.getItem("ext_cols")) || 5;
 if (savedCols > 6) savedCols = 6;
 if (savedCols < 2) savedCols = 2;
 
 const CONFIG = {
     view: localStorage.getItem("ext_view") || "grid",
-    cols: savedCols ,
+    cols: savedCols,
     source: localStorage.getItem("ext_source") || "bar",
     theme: localStorage.getItem("ext_theme") || "light"
 };
 
+const defaultShortcuts = [
+    { name: "YouTube", url: "https://youtube.com" },
+    { name: "Gmail", url: "https://mail.google.com" },
+    { name: "GitHub", url: "https://github.com" },
+    { name: "ChatGPT", url: "https://chatgpt.com" },
+    { name: "Twitter", url: "https://x.com" }
+];
+
+let shortcutsData = JSON.parse(localStorage.getItem('ext_user_shortcuts')) || defaultShortcuts;
+
+// --- Initialization ---
 function initUI() {
     document.body.setAttribute("data-theme", CONFIG.theme);
     themeSelect.value = CONFIG.theme;
     sourceSelect.value = CONFIG.source;
 
     applyViewMode(CONFIG.view);
-
     colSlider.value = CONFIG.cols;
     updateGridColumns(CONFIG.cols);
+
+    renderShortcuts();
 }
 
+// --- Shortcuts Logic ---
+function renderShortcuts() {
+    const container = document.getElementById("shortcuts-container");
+    if (!container) return;
+    container.innerHTML = "";
+
+    shortcutsData.forEach(sc => {
+        const a = document.createElement("a");
+        a.className = "shortcut-item";
+        a.href = sc.url;
+        a.title = sc.name;
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "shortcut-icon-wrapper";
+
+        const img = document.createElement("img");
+        try {
+            img.src = faviconUrl(new URL(sc.url).hostname);
+        } catch {
+            img.src = "";
+        }
+
+        img.onerror = () => {
+            img.onerror = null;
+            const letter = sc.name.slice(0, 1).toUpperCase();
+            img.src = `data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="32" fill="%23374151">${letter}</text></svg>`;
+        };
+
+        const label = document.createElement("span");
+        label.className = "shortcut-label";
+        label.textContent = sc.name;
+
+        wrapper.appendChild(img);
+        a.appendChild(wrapper);
+        a.appendChild(label);
+        container.appendChild(a);
+    });
+
+    // Add "+" Button
+    const addBtn = document.createElement("a");
+    addBtn.className = "shortcut-item add-shortcut-btn";
+
+    const addWrapper = document.createElement("div");
+    addWrapper.className = "shortcut-icon-wrapper";
+    addWrapper.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+
+    const addLabel = document.createElement("span");
+    addLabel.className = "shortcut-label";
+    addLabel.textContent = "Add shortcut";
+
+    addBtn.appendChild(addWrapper);
+    addBtn.appendChild(addLabel);
+
+    addBtn.addEventListener("click", () => {
+        nameInput.value = "";
+        urlInput.value = "";
+        modal.classList.remove("hidden");
+        nameInput.focus();
+    });
+
+    container.appendChild(addBtn);
+}
+
+// Modal Listeners
+function closeShortcutModal() {
+    modal.classList.add("hidden");
+}
+
+cancelShortcutBtn.addEventListener("click", closeShortcutModal);
+
+modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeShortcutModal();
+});
+
+saveShortcutBtn.addEventListener("click", () => {
+    const name = nameInput.value.trim();
+    let url = urlInput.value.trim();
+
+    if (!name || !url) return;
+
+    if (!/^https?:\/\//i.test(url)) {
+        url = 'https://' + url;
+    }
+
+    shortcutsData.push({ name, url });
+    localStorage.setItem('ext_user_shortcuts', JSON.stringify(shortcutsData));
+
+    renderShortcuts();
+    closeShortcutModal();
+});
+
+// --- UI Logic ---
 function applyViewMode(mode) {
     grid.setAttribute("data-view", mode);
     CONFIG.view = mode;
@@ -55,6 +172,7 @@ function updateGridColumns(count) {
     localStorage.setItem("ext_cols", count);
 }
 
+// --- Event Listeners ---
 viewGridBtn.addEventListener("click", () => applyViewMode("grid"));
 viewListBtn.addEventListener("click", () => applyViewMode("list"));
 
@@ -75,6 +193,48 @@ sourceSelect.addEventListener("change", (e) => {
     load();
 });
 
+// --- Account Dropdown Logic ---
+if (accountBtn && accountDropdown) {
+    accountBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        accountDropdown.classList.toggle("hidden");
+
+        const chevron = accountBtn.querySelector(".chevron");
+        if (accountDropdown.classList.contains("hidden")) {
+            chevron.style.transform = "rotate(0deg)";
+        } else {
+            chevron.style.transform = "rotate(180deg)";
+        }
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!accountDropdown.contains(e.target) && !accountDropdown.classList.contains("hidden")) {
+            accountDropdown.classList.add("hidden");
+            accountBtn.querySelector(".chevron").style.transform = "rotate(0deg)";
+        }
+    });
+}
+
+// --- Google Identity Fetcher ---
+function fetchGoogleAccount() {
+    if (chrome && chrome.identity && chrome.identity.getProfileUserInfo) {
+        chrome.identity.getProfileUserInfo({ accountStatus: "ANY" }, (userInfo) => {
+            if (userInfo && userInfo.email) {
+                const email = userInfo.email;
+                const name = email.split('@')[0];
+
+                document.getElementById('main-account-name').textContent = name;
+                document.getElementById('main-avatar').src = `https://ui-avatars.com/api/?name=${name}&background=2563eb&color=fff`;
+
+                document.getElementById('dropdown-name').textContent = name;
+                document.getElementById('dropdown-email').textContent = email;
+                document.getElementById('dropdown-avatar').src = `https://ui-avatars.com/api/?name=${name}&background=2563eb&color=fff`;
+            }
+        });
+    }
+}
+
+// --- Bookmark Utility Functions ---
 function isLink(node) {
     return node && node.url && typeof node.url === "string";
 }
@@ -101,6 +261,7 @@ function faviconUrl(pageUrl) {
     return `https://www.google.com/s2/favicons?domain=${pageUrl}&sz=64`;
 }
 
+// --- Card Generation ---
 function createCard(item) {
     const div = document.createElement("div");
     div.className = "card";
@@ -134,6 +295,7 @@ function createCard(item) {
     return div;
 }
 
+// --- Rendering & Filtering ---
 function render(list) {
     grid.innerHTML = "";
     if (!list.length) {
@@ -163,6 +325,7 @@ function applyFilter() {
 
 searchInput.addEventListener("input", applyFilter);
 
+// --- Fetching Data ---
 async function getBookmarksBarLinks() {
     return new Promise((resolve) => {
         chrome.bookmarks.getTree((tree) => {
@@ -190,6 +353,7 @@ async function load() {
     applyFilter();
 }
 
+// --- Clock Logic ---
 function updateClock() {
     const clockElement = document.getElementById('clock');
     if (!clockElement) return;
@@ -207,7 +371,9 @@ function updateClock() {
     clockElement.textContent = `${hours}:${minutes} ${ampm}`;
 }
 
+// --- Bootstrap ---
 updateClock();
 setInterval(updateClock, 1000);
+fetchGoogleAccount();
 initUI();
 load();

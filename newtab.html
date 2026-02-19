@@ -12,7 +12,10 @@
       <main class="main-panel glass-panel">
         <header class="top">
           <div class="header-main">
-            <h1>Bookmarks</h1>
+            
+            <div class="header-left">
+              <h1>Bookmarks</h1>
+            </div>
             
             <div class="toolbar">
               <div class="view-toggles">
@@ -60,6 +63,32 @@
       </main>
 
       <aside class="side-panel">
+        
+        <div class="account-wrapper">
+          <div class="account-selector" id="account-selector">
+            <button class="active-account" id="active-account-btn" title="Switch Account">
+              <img src="https://ui-avatars.com/api/?name=User&background=2563eb&color=fff" alt="Account" class="avatar" id="main-avatar" />
+              <span class="account-name" id="main-account-name">Sign In</span>
+              <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+
+            <div class="account-dropdown hidden" id="account-dropdown">
+              <div class="account-item active">
+                <img src="https://ui-avatars.com/api/?name=User&background=2563eb&color=fff" class="avatar" id="dropdown-avatar" alt="Avatar"/>
+                <div class="account-info">
+                  <div class="name" id="dropdown-name">Not Signed In</div>
+                  <div class="email" id="dropdown-email">Please sign into Chrome</div>
+                </div>
+              </div>
+              <div class="divider-horizontal"></div>
+              <button class="add-account-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Manage accounts
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="side-content">
           <div id="clock" class="clock"></div>
           
@@ -69,10 +98,31 @@
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </button>
           </form>
+
+          <div class="shortcuts-container" id="shortcuts-container">
+            </div>
         </div>
       </aside>
 
     </div>
+
+    <div id="shortcut-modal" class="modal-overlay hidden">
+      <div class="modal-content glass-panel">
+        <h3>Add Shortcut</h3>
+        <div class="modal-body">
+          <label for="shortcut-name">Name</label>
+          <input type="text" id="shortcut-name" placeholder="e.g., Reddit" autocomplete="off" />
+          
+          <label for="shortcut-url">URL</label>
+          <input type="text" id="shortcut-url" placeholder="reddit.com" autocomplete="off" />
+        </div>
+        <div class="modal-footer">
+          <button id="cancel-shortcut" class="btn btn-secondary">Cancel</button>
+          <button id="save-shortcut" class="btn btn-primary">Save</button>
+        </div>
+      </div>
+    </div>
+
     <script src="newtab.js"></script>
   </body>
 </html>
