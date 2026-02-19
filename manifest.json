@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Bookmark Home Dashboard",
+  "version": "1.0.0",
+  "description": "Show bookmarks on the new tab page as icons with names.",
+  "permissions": ["bookmarks"],
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  }
+}
